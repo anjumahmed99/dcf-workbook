@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Learn discounted cash flow (DCF) valuation step by step, then build your own simplified DCF model. Written for A-level students.">
+<title>The DCF Workbook</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2318213B'/%3E%3Crect x='5' y='7' width='6' height='19' fill='%23FFE14D'/%3E%3Crect x='13' y='12' width='6' height='14' fill='%23FFE14D'/%3E%3Crect x='21' y='17' width='6' height='9' fill='%23FFE14D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Layout: a revision exercise book. Grid-paper ground, sticky chapter list on the left, one reading column, wide workbench for the model. */
+:root{
+  --paper:#F7F9FD; --grid:#E3E9F4; --card:#FFFFFF; --ink:#18213B; --muted:#55607A; --line:#C9D2E4;
+  --pen:#2550D8; --pen-soft:#E2E9FC; --hl:#FFE14D; --on-hl:#18213B;
+  --red:#C2382E; --red-soft:#FBE3E0; --green:#1B7F51; --green-soft:#DCF1E6;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-hand:"Caveat","Bradley Hand","Segoe Print",cursive;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#10162A; --grid:#18203A; --card:#161F38; --ink:#E6EBF7; --muted:#9BA6C0; --line:#2B3756;
+  --pen:#89A6FF; --pen-soft:#22305C; --hl:#E9CB34; --on-hl:#121829;
+  --red:#FF8B7E; --red-soft:#3E2328; --green:#62D49D; --green-soft:#173A2D; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#10162A; --grid:#18203A; --card:#161F38; --ink:#E6EBF7; --muted:#9BA6C0; --line:#2B3756;
+  --pen:#89A6FF; --pen-soft:#22305C; --hl:#E9CB34; --on-hl:#121829;
+  --red:#FF8B7E; --red-soft:#3E2328; --green:#62D49D; --green-soft:#173A2D; color-scheme:dark;}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6}
+a{color:var(--pen)}
+:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,5.4vw,3.7rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:800;letter-spacing:-.01em}
+h3{font-size:1.2rem;font-weight:600}
+p{margin:0;max-width:65ch}
+.num,.mono{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+mark{background:linear-gradient(104deg,transparent 2%,var(--hl) 4%,var(--hl) 96%,transparent 98%);color:var(--on-hl);padding:0 .15em}
+.eyebrow{font-family:var(--f-num);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pen);font-weight:600}
+.note{font-family:var(--f-hand);font-size:1.45rem;line-height:1.15;color:var(--red);transform:rotate(-1.2deg);display:block}
+.muted{color:var(--muted)}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--paper);border-bottom:1.5px solid var(--ink)}
+.topbar-in{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:1.15rem;color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px;flex:none}
+.progress{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--muted)}
+.pbar{width:120px;height:8px;border:1.5px solid var(--ink);border-radius:2px;overflow:hidden;background:var(--card)}
+.pbar i{display:block;height:100%;background:var(--pen);width:0;transition:width .3s}
+.mnav{display:none;overflow-x:auto;gap:6px;padding:0 16px 10px;scrollbar-width:none}
+.mnav a{flex:none;font-size:.85rem;padding:4px 10px;border:1.5px solid var(--line);border-radius:4px;text-decoration:none;color:var(--ink);background:var(--card)}
+.mnav a.on{border-color:var(--ink);background:var(--hl);color:var(--on-hl)}
+
+/* shell */
+.shell{max-width:1200px;margin:0 auto;padding-inline:16px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:56px}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 72px);align-self:start;padding-block:36px}
+.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.toc a{display:grid;grid-template-columns:22px 1fr 16px;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;text-decoration:none;color:var(--muted);font-size:.95rem}
+.toc a .n{font-family:var(--f-num);font-size:.8rem}
+.toc a:hover{color:var(--ink);background:var(--card)}
+.toc a.on{color:var(--ink);background:var(--card);box-shadow:inset 3px 0 0 var(--pen)}
+.tick{width:14px;height:14px;border:1.5px solid var(--line);border-radius:3px;display:inline-grid;place-items:center}
+.tick.done{background:var(--green);border-color:var(--green)}
+.tick.done::after{content:"";width:7px;height:4px;border-left:2px solid var(--card);border-bottom:2px solid var(--card);transform:rotate(-45deg) translate(1px,-1px)}
+.toc .key{margin-top:18px;font-size:.8rem;color:var(--muted);display:flex;gap:8px;align-items:center}
+main{padding-block:28px 72px;min-width:0}
+@media (max-width:900px){.shell{grid-template-columns:minmax(0,1fr);gap:0}.toc{display:none}.mnav{display:flex}.progress .lbl{display:none}}
+
+/* sections */
+.ch{padding-block:56px;border-top:1.5px dashed var(--line);display:grid;gap:22px}
+.ch>*{min-width:0}
+.read{max-width:760px;display:grid;gap:18px}
+.hero{border-top:0;padding-top:24px}
+.lede{font-size:1.15rem;max-width:58ch}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.reason{border-top:3px solid var(--ink);padding-top:10px;display:grid;gap:4px}
+.reason b{font-family:var(--f-display);font-size:1.05rem}
+
+/* panels */
+.panel{background:var(--card);border:1.5px solid var(--ink);border-radius:8px;padding:20px;display:grid;gap:18px}
+.panel-grid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:760px){.panel-grid{grid-template-columns:minmax(0,1fr)}}
+.controls{display:grid;gap:16px}
+.ctrl{display:grid;gap:4px}
+.ctrl .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:.93rem}
+.ctrl output{font-family:var(--f-num);font-weight:600;color:var(--pen)}
+.ctrl small{color:var(--muted);font-size:.8rem;line-height:1.35}
+input[type=range]{width:100%;accent-color:var(--pen);margin:0}
+input[type=range]:disabled{opacity:.4}
+.big{font-family:var(--f-num);font-size:clamp(1.8rem,4vw,2.4rem);font-weight:600;line-height:1}
+.formula{font-family:var(--f-num);font-size:1rem;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.statrow{display:flex;flex-wrap:wrap;gap:24px 36px}
+.stat{display:grid;gap:4px}
+.stat .lbl{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+svg.chart{width:100%;height:auto;display:block}
+svg .gl{stroke:var(--line);stroke-width:1}
+svg .ax{fill:var(--muted);font:12px var(--f-num)}
+svg .val{fill:var(--ink);font:600 12px var(--f-num)}
+svg .bar{fill:var(--pen-soft);stroke:var(--pen);stroke-width:1}
+svg .bar-hl{fill:var(--pen)}
+svg .bar-tot{fill:var(--pen)}
+svg .bar-pos{fill:var(--green)}
+svg .bar-neg{fill:var(--red)}
+svg .bar-tv{fill:var(--hl);stroke:var(--ink);stroke-width:1}
+svg .bar-out{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:3 2}
+svg .conn{stroke:var(--muted);stroke-dasharray:3 3}
+svg .zero{stroke:var(--ink);stroke-width:1.5}
+svg .div{stroke:var(--ink);stroke-dasharray:4 3}
+svg .lab{fill:var(--ink);font:600 13px var(--f-body)}
+svg rect{transition:y .25s,height .25s}
+
+/* buttons */
+.btn{font:700 .95rem var(--f-body);color:var(--ink);background:var(--card);border:1.5px solid var(--ink);border-radius:6px;padding:9px 14px;cursor:pointer;text-align:left}
+.btn:hover{background:var(--pen-soft)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.primary:hover{background:var(--pen);border-color:var(--pen);color:var(--card)}
+.btn[aria-pressed="true"]{background:var(--hl);color:var(--on-hl)}
+.btn:disabled{opacity:.45;cursor:default}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+
+/* hero anatomy */
+.anatomy{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 14px;background:var(--card);border:1.5px solid var(--ink);border-radius:8px;padding:22px 20px 16px}
+.term{display:grid;justify-items:center;gap:6px;text-align:center}
+.op{font-family:var(--f-num);font-size:1.4rem;padding-top:14px}
+.frac{display:inline-grid;font-family:var(--f-num);font-size:1.15rem;text-align:center}
+.frac span:first-child{border-bottom:2px solid currentColor;padding:0 6px 2px}
+.frac span:last-child{padding-top:2px}
+.term .note{font-size:1.2rem;max-width:12ch;color:var(--red)}
+.term.tv .frac span:first-child{background:var(--hl);color:var(--on-hl)}
+
+/* your turn */
+.turn{border:2px dashed var(--pen);border-radius:8px;padding:18px 20px;display:grid;gap:12px;background:var(--card)}
+.turn .note{color:var(--pen);font-size:1.6rem}
+.answer{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.answer label{font-weight:700}
+.answer input{font:600 1rem var(--f-num);width:9rem;padding:8px 10px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+.fb{font-size:.95rem;min-height:1.4em}
+.fb.ok{color:var(--green);font-weight:700}
+.fb.no{color:var(--red)}
+
+/* builder */
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.step{font:600 .9rem var(--f-body);display:flex;align-items:center;gap:8px;padding:7px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--card);color:var(--muted);cursor:pointer}
+.step .n{font-family:var(--f-num);font-size:.8rem;width:20px;height:20px;display:grid;place-items:center;border:1.5px solid currentColor;border-radius:3px}
+.step.seen{color:var(--ink);border-color:var(--ink)}
+.step.cur{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.explain{background:var(--pen-soft);border-radius:8px;padding:16px 18px;display:grid;gap:8px}
+.explain h3{font-size:1.25rem}
+.bench{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.bench{grid-template-columns:minmax(0,1fr)}}
+.group{display:grid;gap:12px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+.group:last-child{border-bottom:0;padding-bottom:0}
+.group h4{margin:0;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;gap:8px;align-items:center}
+.group h4 .n{font-family:var(--f-num)}
+.group.ahead{opacity:.45}
+.group.now h4{color:var(--pen)}
+.presets{display:grid;gap:6px}
+.tablewrap{overflow-x:auto;border:1.5px solid var(--ink);border-radius:8px;background:var(--card)}
+table.model{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+table.model th,table.model td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.model th:first-child,table.model td:first-child{text-align:left;position:sticky;left:0;background:var(--card);white-space:normal;min-width:190px}
+table.model thead th{font-family:var(--f-num);font-size:.8rem;color:var(--muted);font-weight:600;border-bottom:1.5px solid var(--ink)}
+table.model td{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+table.model td:first-child{font-family:var(--f-body)}
+table.model .how{display:block;font-size:.76rem;color:var(--muted)}
+table.model tr.total td{font-weight:600;border-top:1.5px solid var(--ink)}
+table.model tr.total td:not(:first-child){background:var(--pen-soft)}
+table.model tr.locked td:not(:first-child){color:var(--line)}
+table.model tr.locked td:first-child{color:var(--muted)}
+table.model tr.fresh td:first-child{box-shadow:inset 3px 0 0 var(--hl)}
+.units{font-size:.8rem;color:var(--muted)}
+.valgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.bridge{display:grid;gap:0;font-size:.95rem}
+.bridge div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line)}
+.bridge div span:last-child{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.bridge .eq{font-weight:700;border-bottom:1.5px solid var(--ink)}
+.bridge .final{font-weight:700;font-size:1.1rem}
+.bridge .final span:last-child{background:var(--hl);color:var(--on-hl);padding:0 6px}
+.verdict{border-radius:6px;padding:14px 16px;display:grid;gap:6px}
+.verdict.up{background:var(--green-soft)}
+.verdict.down{background:var(--red-soft)}
+.verdict.flat{background:var(--pen-soft)}
+.verdict b{font-family:var(--f-display);font-size:1.2rem}
+.warn{background:var(--red-soft);color:var(--ink);border-left:4px solid var(--red);padding:10px 14px;border-radius:4px}
+.lockmsg{color:var(--muted);font-style:italic}
+
+/* sensitivity */
+.senswrap{overflow-x:auto}
+table.sens{border-collapse:separate;border-spacing:4px;font-family:var(--f-num);font-size:.92rem;min-width:480px}
+table.sens th{font-weight:600;color:var(--muted);padding:6px 8px;font-size:.82rem}
+table.sens td{padding:10px 12px;text-align:center;border-radius:4px;color:var(--ink);min-width:72px}
+table.sens td.base{outline:2.5px solid var(--ink);outline-offset:-2px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+
+/* quiz */
+.quiz{display:grid;gap:16px}
+.q{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:18px;display:grid;gap:12px}
+.q.answered{border-color:var(--ink)}
+.q h3{font-family:var(--f-body);font-size:1.05rem;font-weight:700}
+.q .opts{display:grid;gap:8px}
+.q .opt{font:400 .98rem var(--f-body);text-align:left;padding:10px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer}
+.q .opt:hover:not(:disabled){border-color:var(--ink)}
+.q .opt:disabled{cursor:default}
+.q .opt.right{background:var(--green-soft);border-color:var(--green);font-weight:700}
+.q .opt.wrong{background:var(--red-soft);border-color:var(--red);text-decoration:line-through}
+.q .why{font-size:.95rem;color:var(--ink);border-left:3px solid var(--pen);padding-left:12px}
+.score{font-family:var(--f-num);font-size:1.05rem}
+
+/* glossary */
+dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px 28px;margin:0}
+dl.gloss div{border-top:1.5px solid var(--ink);padding-top:8px}
+dl.gloss dt{font-family:var(--f-display);font-weight:600;font-size:1.05rem}
+dl.gloss dd{margin:2px 0 0;color:var(--muted);font-size:.95rem}
+
+/* legal + footer */
+.legal{max-width:760px;padding-block:40px 72px;display:grid;gap:18px}
+.legal h2{margin-top:14px;font-size:1.35rem}
+.legal ul{margin:0;padding-left:1.2em;display:grid;gap:6px;max-width:65ch}
+.legal .meta{font-family:var(--f-num);font-size:.85rem;color:var(--muted)}
+.back{justify-self:start}
+footer{border-top:1.5px solid var(--ink);background:var(--paper)}
+.foot-in{max-width:1200px;margin:0 auto;padding:22px 16px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:.9rem;color:var(--muted)}
+.foot-in nav{display:flex;flex-wrap:wrap;gap:18px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#start">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="var(--ink)"/><rect x="5" y="7" width="6" height="19" fill="var(--hl)"/><rect x="13" y="12" width="6" height="14" fill="var(--hl)"/><rect x="21" y="17" width="6" height="9" fill="var(--hl)"/></svg>
+      The DCF Workbook
+    </a>
+    <div class="progress"><span class="lbl">Your checkpoints</span><span class="pbar"><i id="pfill"></i></span><span class="mono" id="ptext">0 / 7</span></div>
+  </div>
+  <nav class="mnav" id="mnav" aria-label="Chapters"></nav>
+</header>
+
+<div id="view-main">
+<div class="shell">
+  <aside class="toc" aria-label="Chapters">
+    <ol id="toc"></ol>
+    <div class="key"><span class="tick done"></span> checkpoint done</div>
+  </aside>
+
+  <main>
+    <!-- HERO -->
+    <section class="ch hero" id="start">
+      <div class="read">
+        <span class="eyebrow">A-level Economics and Business</span>
+        <h1>Value a company with a <mark>discounted cash flow</mark> model</h1>
+        <p class="lede">A DCF estimates what a business is worth today by adding up the cash it should make in the future, then shrinking each amount because it arrives later. Work through six short chapters, then build your own DCF for a made-up bubble tea chain.</p>
+      </div>
+
+      <div class="anatomy" aria-label="The DCF formula, labelled">
+        <div class="term"><span class="mono" style="font-size:1.1rem;padding-top:14px">Value today</span></div>
+        <div class="op">=</div>
+        <div class="term"><span class="frac"><span>FCF<sub>1</sub></span><span>(1 + r)<sup>1</sup></span></span><span class="note">cash made in year 1</span></div>
+        <div class="op">+</div>
+        <div class="term"><span class="frac"><span>FCF<sub>2</sub></span><span>(1 + r)<sup>2</sup></span></span><span class="note">bottom number shrinks it for waiting</span></div>
+        <div class="op">+ ... +</div>
+        <div class="term tv"><span class="frac"><span>TV</span><span>(1 + r)<sup>5</sup></span></span><span class="note">every year after year 5</span></div>
+      </div>
+
+      <div class="panel" style="max-width:760px">
+        <h3>Quick question before you start</h3>
+        <p>Someone offers you £100. You can take it today, or take exactly £100 one year from now. Which do you choose?</p>
+        <div class="btnrow">
+          <button class="btn" id="q0-now" type="button">£100 today</button>
+          <button class="btn" id="q0-later" type="button">£100 in one year</button>
+        </div>
+        <p class="fb" id="q0-fb" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- CH1 -->
+    <section class="ch" id="time">
+      <div class="read">
+        <span class="eyebrow">Chapter 1</span>
+        <h2>Money now is worth more than money later</h2>
+        <p>This idea is called the <b>time value of money</b>, and the whole of DCF is built on it. There are three reasons £100 today beats £100 next year:</p>
+        <div class="cols">
+          <div class="reason"><b>Inflation</b><span>Prices rise, so £100 buys less next year than it does today.</span></div>
+          <div class="reason"><b>Opportunity cost</b><span>Money you have now can be saved or invested to earn interest.</span></div>
+          <div class="reason"><b>Risk</b><span>A promise of future money might not be kept. Cash in hand is certain.</span></div>
+        </div>
+        <p>To compare future money with money today, we <b>discount</b> it. The result is called the <b>present value</b> (PV):</p>
+        <div class="formula">PV = Future amount ÷ (1 + r)<sup>n</sup>&nbsp;&nbsp;&nbsp;r = discount rate, n = number of years</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-grid">
+          <div class="controls">
+            <div class="ctrl"><div class="top"><label for="tv-amt">Future amount</label><output id="tv-amt-o"></output></div><input type="range" id="tv-amt" min="100" max="1000" step="50" value="100"></div>
+            <div class="ctrl"><div class="top"><label for="tv-rate">Discount rate (r)</label><output id="tv-rate-o"></output></div><input type="range" id="tv-rate" min="0" max="20" step="0.5" value="8"></div>
+            <div class="ctrl"><div class="top"><label for="tv-yrs">Years to wait (n)</label><output id="tv-yrs-o"></output></div><input type="range" id="tv-yrs" min="1" max="10" step="1" value="5"></div>
+            <div class="stat"><span class="lbl">Worth today</span><span class="big" id="tv-result"></span></div>
+            <div class="formula" id="tv-formula"></div>
+            <p class="muted" style="font-size:.92rem">Waiting costs you <b class="mono" id="tv-lost"></b> in today's money.</p>
+          </div>
+          <div>
+            <svg class="chart" id="tv-chart" viewBox="0 0 640 250" role="img" aria-label="Present value of the future amount for each year from now to year 10"></svg>
+            <p class="muted" style="font-size:.85rem">Each bar shows what the amount is worth today if you had to wait that many years. The dark bar is the year you picked.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="turn" id="turn-time">
+        <span class="note">Your turn</span>
+        <p>You are promised <b>£121 in 2 years</b>. The discount rate is <b>10%</b>. What is it worth today?</p>
+        <div class="answer"><label for="a-time">£</label><input id="a-time" inputmode="decimal" autocomplete="off"><button class="btn primary" type="button" data-check="time">Check</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- CH2 -->
+    <section class="ch" id="cash">
+      <div class="read">
+        <span class="eyebrow">Chapter 2</span>
+        <h2>Profit is not the same as cash</h2>
+        <p>A DCF values the <b>free cash flow</b> (FCF) a business produces: the cash left over after it has paid its running costs and tax and invested in its future. That cash could be paid out to the people who fund the business.</p>
+        <p>Profit in the accounts is a good starting point, but it needs adjusting. Here is one year for a single shop. Move the sliders and watch how operating profit turns into free cash flow.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-grid">
+          <div class="controls">
+            <div class="ctrl"><div class="top"><label for="cf-ebit">EBIT (operating profit)</label><output id="cf-ebit-o"></output></div><input type="range" id="cf-ebit" min="50" max="300" step="10" value="120"></div>
+            <div class="ctrl"><div class="top"><label for="cf-tax">Tax rate</label><output id="cf-tax-o"></output></div><input type="range" id="cf-tax" min="0" max="40" step="1" value="25"><small>UK corporation tax main rate is 25%.</small></div>
+            <div class="ctrl"><div class="top"><label for="cf-da">Depreciation (D&amp;A)</label><output id="cf-da-o"></output></div><input type="range" id="cf-da" min="0" max="80" step="5" value="30"></div>
+            <div class="ctrl"><div class="top"><label for="cf-capex">Capex (new equipment)</label><output id="cf-capex-o"></output></div><input type="range" id="cf-capex" min="0" max="200" step="5" value="50"></div>
+            <div class="ctrl"><div class="top"><label for="cf-wc">Extra working capital</label><output id="cf-wc-o"></output></div><input type="range" id="cf-wc" min="0" max="60" step="5" value="10"></div>
+          </div>
+          <div>
+            <svg class="chart" id="cf-chart" viewBox="0 0 640 280" role="img" aria-label="Waterfall chart from EBIT to free cash flow"></svg>
+            <p class="muted" style="font-size:.85rem">Figures in £ thousands. Blue bars are subtotals, green adds cash, red takes it away.</p>
+          </div>
+        </div>
+        <ol class="read" style="margin:0;padding-left:1.3em;gap:10px" id="cf-steps"></ol>
+      </div>
+
+      <div class="turn" id="turn-cash">
+        <span class="note">Your turn</span>
+        <p>A firm has EBIT of <b>£20m</b> and pays tax at <b>25%</b>. Depreciation is <b>£5m</b>, capex is <b>£8m</b> and working capital rises by <b>£2m</b>. What is its free cash flow, in £m?</p>
+        <div class="answer"><label for="a-cash">£m</label><input id="a-cash" inputmode="decimal" autocomplete="off"><button class="btn primary" type="button" data-check="cash">Check</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- CH3 -->
+    <section class="ch" id="rate">
+      <div class="read">
+        <span class="eyebrow">Chapter 3</span>
+        <h2>Choosing the discount rate</h2>
+        <p>The discount rate is the <b>return investors expect</b> for putting their money into this business. The riskier the cash flows, the higher the return investors demand, so the higher the discount rate and the lower the value today.</p>
+        <p>Pick a type of investment to see how much £1 million received in 5 years is worth today.</p>
+      </div>
+
+      <div class="panel">
+        <div class="btnrow" role="group" aria-label="Type of investment">
+          <button class="btn" type="button" data-risk="4" aria-pressed="false">UK government bond, about 4%</button>
+          <button class="btn" type="button" data-risk="8" aria-pressed="true">Large supermarket chain, about 8%</button>
+          <button class="btn" type="button" data-risk="20" aria-pressed="false">Brand new start-up, about 20%</button>
+        </div>
+        <div class="statrow">
+          <div class="stat"><span class="lbl">£1m in 5 years is worth today</span><span class="big" id="risk-pv"></span></div>
+          <div class="stat"><span class="lbl">Calculation</span><span class="formula" id="risk-f"></span></div>
+        </div>
+        <p class="muted" id="risk-note"></p>
+      </div>
+
+      <div class="read">
+        <h3>A bit more technical: WACC</h3>
+        <p>Companies are funded by two groups. <b>Shareholders</b> (equity) and <b>lenders</b> (debt). Each expects a return, so analysts blend the two into the <b>weighted average cost of capital</b>, or WACC. That blended figure is usually the discount rate in a DCF.</p>
+        <p>The cost of equity is often estimated with <b>CAPM</b>: a safe return plus extra for risk. <b>Beta</b> measures how much a share price moves compared with the whole stock market. A beta of 1.5 means it tends to move 50% more than the market. Debt is cheaper partly because interest is paid before tax, which saves the company tax.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-grid">
+          <div class="controls">
+            <div class="ctrl"><div class="top"><label for="w-beta">Beta</label><output id="w-beta-o"></output></div><input type="range" id="w-beta" min="0.5" max="2" step="0.1" value="1.2"><small>Risk-free rate 4% and market risk premium 5% are fixed here.</small></div>
+            <div class="ctrl"><div class="top"><label for="w-debt">Funded by debt</label><output id="w-debt-o"></output></div><input type="range" id="w-debt" min="0" max="60" step="5" value="30"><small>Interest rate on debt 6%, tax rate 25%.</small></div>
+          </div>
+          <div class="controls">
+            <div class="formula" id="w-ke"></div>
+            <div class="formula" id="w-kd"></div>
+            <div class="formula" id="w-wacc"></div>
+            <svg class="chart" id="w-chart" viewBox="0 0 640 70" role="img" aria-label="Split of funding between equity and debt"></svg>
+            <div class="stat"><span class="lbl">WACC (discount rate)</span><span class="big" id="w-out"></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="max-width:60ch">In your own model you can simply choose a rate. 8% to 12% is a sensible range for most established companies.</p>
+    </section>
+
+    <!-- CH4 -->
+    <section class="ch" id="forever">
+      <div class="read">
+        <span class="eyebrow">Chapter 4</span>
+        <h2>The terminal value: everything after year 5</h2>
+        <p>Businesses do not stop after five years, but forecasting each year to 2080 would be guesswork. Instead, analysts forecast about five years in detail, then assume cash flow grows at a small, steady rate <b>forever</b>. The value of all those later years, squeezed into one number, is the <b>terminal value</b> (TV).</p>
+        <div class="formula">TV = FCF<sub>5</sub> × (1 + g) ÷ (r − g)&nbsp;&nbsp;&nbsp;g = long-run growth rate</div>
+        <p>This is the <b>growing perpetuity</b> formula. It only works if g is smaller than r. Long-run growth is usually set at 2% to 3%, close to how fast the whole economy grows, because no company can outgrow the economy forever.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-grid">
+          <div class="controls">
+            <div class="ctrl"><div class="top"><label for="tg-g">Long-run growth (g)</label><output id="tg-g-o"></output></div><input type="range" id="tg-g" min="0" max="12" step="0.5" value="2"></div>
+            <div class="ctrl"><div class="top"><label for="tg-r">Discount rate (r)</label><output id="tg-r-o"></output></div><input type="range" id="tg-r" min="5" max="15" step="0.5" value="9"></div>
+            <div class="stat"><span class="lbl">Terminal value at year 5</span><span class="big" id="tg-tv"></span></div>
+            <div class="formula" id="tg-f"></div>
+            <div id="tg-warn" class="warn" hidden>g is not below r, so the formula breaks. It would say the business is worth an infinite amount, because cash grows faster than you discount it. Lower g or raise r.</div>
+          </div>
+          <div>
+            <svg class="chart" id="tg-chart" viewBox="0 0 640 260" role="img" aria-label="Cash flows for 30 years with their present values"></svg>
+            <p class="muted" style="font-size:.85rem">Dashed outlines show the cash each year (£m). Filled bars show what that cash is worth today. Because each later year is discounted more, the filled bars fade towards zero, which is why "forever" still adds up to a finite number.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="turn" id="turn-forever">
+        <span class="note">Your turn</span>
+        <p>Year 5 free cash flow is <b>£10m</b>. Long-run growth is <b>2%</b> and the discount rate is <b>7%</b>. What is the terminal value, in £m?</p>
+        <div class="answer"><label for="a-forever">£m</label><input id="a-forever" inputmode="decimal" autocomplete="off"><button class="btn primary" type="button" data-check="forever">Check</button></div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- CH5 BUILDER -->
+    <section class="ch" id="build">
+      <div class="read">
+        <span class="eyebrow">Chapter 5</span>
+        <h2>Build a DCF for Bubble &amp; Co</h2>
+        <p><b>Bubble &amp; Co</b> is a made-up UK bubble tea chain, invented for practice. Last year (Year 0) it had sales of <span class="num">£50m</span>. Its shares trade at <span class="num">£5.90</span>. Is that a fair price? Build the model one step at a time to find out.</p>
+      </div>
+
+      <div class="steps" id="steps" role="tablist" aria-label="Model steps"></div>
+      <div class="explain" id="explain" aria-live="polite"></div>
+      <div class="btnrow">
+        <button class="btn" type="button" id="st-back">Back</button>
+        <button class="btn primary" type="button" id="st-next">Next step</button>
+        <label style="display:flex;align-items:center;gap:8px;font-size:.92rem;margin-left:auto"><input type="checkbox" id="st-all"> Show the whole model</label>
+      </div>
+
+      <div class="bench">
+        <div class="panel" style="gap:14px">
+          <div class="presets">
+            <span class="eyebrow">Try a scenario</span>
+            <div class="btnrow">
+              <button class="btn" type="button" data-preset="cautious">Cautious</button>
+              <button class="btn" type="button" data-preset="base">Base case</button>
+              <button class="btn" type="button" data-preset="optimistic">Optimistic</button>
+            </div>
+          </div>
+          <div class="group" data-step="1"><h4><span class="n">1</span> Revenue</h4>
+            <div class="ctrl"><div class="top"><label for="b-g">Sales growth per year</label><output id="b-g-o"></output></div><input type="range" id="b-g" min="0" max="30" step="1"></div>
+          </div>
+          <div class="group" data-step="2"><h4><span class="n">2</span> Profit</h4>
+            <div class="ctrl"><div class="top"><label for="b-margin">EBIT margin</label><output id="b-margin-o"></output></div><input type="range" id="b-margin" min="0" max="40" step="1"></div>
+            <div class="ctrl"><div class="top"><label for="b-tax">Tax rate</label><output id="b-tax-o"></output></div><input type="range" id="b-tax" min="0" max="40" step="1"></div>
+          </div>
+          <div class="group" data-step="3"><h4><span class="n">3</span> Cash</h4>
+            <div class="ctrl"><div class="top"><label for="b-da">D&amp;A, % of sales</label><output id="b-da-o"></output></div><input type="range" id="b-da" min="0" max="10" step="0.5"></div>
+            <div class="ctrl"><div class="top"><label for="b-capex">Capex, % of sales</label><output id="b-capex-o"></output></div><input type="range" id="b-capex" min="0" max="15" step="0.5"></div>
+            <div class="ctrl"><div class="top"><label for="b-wc">Working capital, % of extra sales</label><output id="b-wc-o"></output></div><input type="range" id="b-wc" min="0" max="30" step="1"></div>
+          </div>
+          <div class="group" data-step="4"><h4><span class="n">4</span> Discount</h4>
+            <div class="ctrl"><div class="top"><label for="b-r">Discount rate (WACC)</label><output id="b-r-o"></output></div><input type="range" id="b-r" min="5" max="15" step="0.5"></div>
+          </div>
+          <div class="group" data-step="5"><h4><span class="n">5</span> Terminal value</h4>
+            <div class="ctrl"><div class="top"><label for="b-tg">Long-run growth</label><output id="b-tg-o"></output></div><input type="range" id="b-tg" min="0" max="5" step="0.25"></div>
+          </div>
+          <div class="group" data-step="6"><h4><span class="n">6</span> Value</h4>
+            <small class="muted">Net debt <span class="num">£15m</span>, <span class="num">10m</span> shares, share price <span class="num">£5.90</span>. These are fixed facts about the company.</small>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:20px;min-width:0">
+          <div>
+            <div class="tablewrap"><table class="model" id="model"></table></div>
+            <p class="units" style="margin-top:6px">£ millions unless stated. Numbers in brackets are subtracted, the usual way accountants show negatives.</p>
+          </div>
+          <div class="valgrid">
+            <div class="panel" id="tv-box"></div>
+            <div class="panel" id="bridge-box"></div>
+          </div>
+          <div class="panel" id="src-box">
+            <h3>Where the value comes from</h3>
+            <svg class="chart" id="src-chart" viewBox="0 0 640 250" role="img" aria-label="Present value of each year's cash flow and of the terminal value"></svg>
+            <p id="src-note"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH6 SENSITIVITY -->
+    <section class="ch" id="sense">
+      <div class="read">
+        <span class="eyebrow">Chapter 6</span>
+        <h2>What if your guesses are wrong?</h2>
+        <p>Every input in a DCF is an estimate. Analysts test how much the answer moves when the two most powerful inputs change. This table uses your model from Chapter 5 and shows the <b>value per share</b> for different discount rates and long-run growth rates.</p>
+      </div>
+      <div class="panel">
+        <div class="senswrap"><table class="sens" id="sens"></table></div>
+        <div class="legend"><span><i style="background:var(--green-soft);outline:1px solid var(--green)"></i>above the £5.90 share price</span><span><i style="background:var(--red-soft);outline:1px solid var(--red)"></i>below the share price</span><span><i style="outline:2px solid var(--ink)"></i>your current model</span></div>
+        <p id="sens-note"></p>
+      </div>
+      <p class="note" style="max-width:60ch">Exam tip: when evaluating a DCF, say that small changes in r and g cause large changes in value, so the result is a range, not one exact answer.</p>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="ch" id="quiz">
+      <div class="read">
+        <span class="eyebrow">Check yourself</span>
+        <h2>Eight questions</h2>
+        <p>Pick an answer to see whether you are right and why. <span class="score" id="score"></span></p>
+      </div>
+      <div class="quiz read" id="quizbox"></div>
+      <button class="btn back" type="button" id="quiz-reset">Reset the quiz</button>
+    </section>
+
+    <!-- GLOSSARY -->
+    <section class="ch" id="glossary">
+      <div class="read">
+        <span class="eyebrow">Reference</span>
+        <h2>Glossary</h2>
+      </div>
+      <dl class="gloss" id="gloss"></dl>
+    </section>
+  </main>
+</div>
+</div>
+
+<!-- PRIVACY -->
+<div id="view-privacy" hidden>
+  <div class="shell" style="grid-template-columns:minmax(0,1fr)">
+    <article class="legal">
+      <a class="btn back" href="#start">Back to the workbook</a>
+      <span class="eyebrow">Legal</span>
+      <h1 style="font-size:clamp(2rem,4.5vw,2.8rem)">Privacy policy</h1>
+      <p class="meta">Last updated 9 October 2026</p>
+      <p>This policy explains what information The DCF Workbook ("the site", "we") handles when you use it. The short version: we do not collect, store or share any personal information about you.</p>
+
+      <h2>Information we collect</h2>
+      <p>None. The site has no accounts, no sign-up, no contact forms and no comment boxes. Answers you type into the exercises and quiz are checked inside your own browser and are never sent anywhere.</p>
+
+      <h2>Cookies and analytics</h2>
+      <p>The site does not set cookies and does not use analytics, advertising or tracking tools.</p>
+
+      <h2>Information stored on your device</h2>
+      <p>To remember which checkpoints you have completed, the site saves a short list (for example "time, cash") in your browser's local storage under the name <span class="mono">dcf-workbook-progress</span>. It stays on your device and we cannot see it. You can delete it at any time:</p>
+      <div class="btnrow"><button class="btn" type="button" id="reset-progress">Delete my saved progress</button><span class="fb" id="reset-fb" aria-live="polite"></span></div>
+      <p>Clearing your browser's site data also removes it.</p>
+
+      <h2>Third parties</h2>
+      <ul>
+        <li><b>Google Fonts.</b> The site's typefaces load from Google's servers. When your browser requests them, Google receives your IP address and basic browser details. See <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google's privacy policy</a>.</li>
+        <li><b>Hosting.</b> The company that hosts this site may keep standard server logs, such as IP addresses and the time of a visit, under its own privacy policy.</li>
+        <li><b>External links.</b> Links to other websites are covered by those websites' own policies.</li>
+      </ul>
+
+      <h2>Children and students</h2>
+      <p>The site is written for students aged around 16 to 18. Because it collects no personal information, it is safe to use without an account or parental consent.</p>
+
+      <h2>Your rights</h2>
+      <p>Under UK data protection law (the UK GDPR and the Data Protection Act 2018) you have rights to access, correct and delete personal data held about you. As we hold none, there is nothing to request. If you have a concern about how your data is handled, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk" rel="noopener noreferrer">ico.org.uk</a>.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If the site changes how it handles information, this page will be updated and the date at the top will change.</p>
+
+    </article>
+  </div>
+</div>
+
+<!-- TERMS -->
+<div id="view-terms" hidden>
+  <div class="shell" style="grid-template-columns:minmax(0,1fr)">
+    <article class="legal">
+      <a class="btn back" href="#start">Back to the workbook</a>
+      <span class="eyebrow">Legal</span>
+      <h1 style="font-size:clamp(2rem,4.5vw,2.8rem)">Terms and conditions</h1>
+      <p class="meta">Last updated 9 October 2026</p>
+      <p>By using The DCF Workbook ("the site") you agree to these terms. If you do not agree, please do not use the site.</p>
+
+      <h2>1. What the site is for</h2>
+      <p>The site is a free educational resource that explains discounted cash flow (DCF) valuation at an introductory level for A-level students and other beginners.</p>
+
+      <h2>2. Not financial advice</h2>
+      <p>Nothing on the site is financial, investment, tax or legal advice. The site is not authorised or regulated by the Financial Conduct Authority. Do not use it to make decisions about buying or selling real investments.</p>
+
+      <h2>3. Example company and figures</h2>
+      <p>Bubble &amp; Co is a fictional company. Its sales, share price, debt and every other figure on the site are invented for teaching. Any resemblance to a real business is unintended.</p>
+
+      <h2>4. Accuracy</h2>
+      <p>The models on the site are deliberately simplified. Real valuations involve many more steps and judgements. We try to keep the content correct, but we do not promise that it is complete, error free or matched to any exam board specification. The site is not affiliated with or endorsed by any exam board. Check important points with your teacher and your course materials.</p>
+
+      <h2>5. Using the content</h2>
+      <p>You may use the site for personal study and show it in classrooms. You may not copy it in bulk, sell it, or present it as your own work.</p>
+
+      <h2>6. Availability</h2>
+      <p>The site is provided free of charge and may change, be unavailable, or be withdrawn at any time without notice.</p>
+
+      <h2>7. Liability</h2>
+      <p>The site is provided "as is". To the extent the law allows, we are not responsible for any loss arising from your use of the site or reliance on its content. Nothing in these terms limits liability that cannot be limited under the law of England and Wales.</p>
+
+      <h2>8. Links to other websites</h2>
+      <p>We are not responsible for the content or practices of websites we link to.</p>
+
+      <h2>9. Privacy</h2>
+      <p>How the site handles information is explained in the <a href="#privacy">privacy policy</a>.</p>
+
+      <h2>10. Changes and governing law</h2>
+      <p>We may update these terms, and the date at the top will change when we do. These terms are governed by the law of England and Wales.</p>
+
+    </article>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-in">
+    <span>The DCF Workbook. For learning only, not financial advice. Bubble &amp; Co is fictional.</span>
+    <nav aria-label="Legal"><a href="#privacy">Privacy policy</a><a href="#terms">Terms and conditions</a></nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const $=(s,el=document)=>el.querySelector(s), $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const gbp=(x,dp=2)=>(x<0?"-":"")+"£"+Math.abs(x).toLocaleString("en-GB",{minimumFractionDigits:dp,maximumFractionDigits:dp});
+const pct=(x,dp=1)=>(x*100).toFixed(dp).replace(/\.0+$/,"")+"%";
+const acc=x=>{const s=Math.abs(x).toFixed(1);return x<-0.049?"("+s+")":s};
+
+/* ---------- progress ---------- */
+const KEY="dcf-workbook-progress";
+const CHECKS=["time","cash","rate","forever","build","sense","quiz"];
+let done=new Set();
+try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))done=new Set(v.filter(x=>CHECKS.includes(x)))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify([...done]))}catch(e){}}
+function markDone(id){if(done.has(id))return;done.add(id);save();renderProgress()}
+
+const CHAPTERS=[["start","","Start here"],["time","1","Time value"],["cash","2","Free cash flow"],["rate","3","Discount rate"],["forever","4","Terminal value"],["build","5","Build a DCF"],["sense","6","Sensitivity"],["quiz","Q","Quiz"],["glossary","G","Glossary"]];
+$("#toc").innerHTML=CHAPTERS.map(([id,n,t])=>`<li><a href="#${id}" data-id="${id}"><span class="n">${n}</span><span>${t}</span>${CHECKS.includes(id)?`<span class="tick" data-tick="${id}"></span>`:"<span></span>"}</a></li>`).join("");
+$("#mnav").innerHTML=CHAPTERS.map(([id,n,t])=>`<a href="#${id}" data-id="${id}">${n?n+". ":""}${t}</a>`).join("");
+function renderProgress(){
+  $$("[data-tick]").forEach(el=>el.classList.toggle("done",done.has(el.dataset.tick)));
+  $("#pfill").style.width=(done.size/CHECKS.length*100)+"%";
+  $("#ptext").textContent=done.size+" / "+CHECKS.length;
+}
+renderProgress();
+
+/* highlight current chapter in nav (no animation, just state) */
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(en=>{if(en.isIntersecting){const id=en.target.id;$$("[data-id]").forEach(a=>a.classList.toggle("on",a.dataset.id===id));
+    if(id==="sense")markDone("sense");}});
+},{rootMargin:"-40% 0px -55% 0px"});
+CHAPTERS.forEach(([id])=>{const el=document.getElementById(id);if(el)io.observe(el)});
+
+/* ---------- views (privacy / terms) ---------- */
+function route(){
+  const h=location.hash.replace("#","");
+  const v=h==="privacy"?"privacy":h==="terms"?"terms":"main";
+  $("#view-main").hidden=v!=="main";$("#view-privacy").hidden=v!=="privacy";$("#view-terms").hidden=v!=="terms";
+  $("#mnav").hidden=v!=="main";
+  if(v!=="main")window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);route();
+$("#reset-progress").addEventListener("click",()=>{done.clear();try{localStorage.removeItem(KEY)}catch(e){}renderProgress();$("#reset-fb").textContent="Saved progress deleted."});
+
+/* ---------- hero question ---------- */
+$("#q0-now").addEventListener("click",()=>{$("#q0-fb").className="fb ok";$("#q0-fb").textContent="Most people choose today, and they are right. You could save it and earn interest, prices might rise, and a promise of future money is never fully certain. Chapter 1 turns that instinct into maths."});
+$("#q0-later").addEventListener("click",()=>{$("#q0-fb").className="fb no";$("#q0-fb").textContent="Interesting choice. But if you took £100 today and saved it at 5% interest, you would have £105 in a year. Waiting leaves you worse off. Chapter 1 shows by how much."});
+
+/* ---------- chapter 1 ---------- */
+function renderTime(){
+  const amt=+$("#tv-amt").value,r=+$("#tv-rate").value/100,n=+$("#tv-yrs").value;
+  const pv=amt/Math.pow(1+r,n);
+  $("#tv-amt-o").textContent=gbp(amt,0);$("#tv-rate-o").textContent=pct(r);$("#tv-yrs-o").textContent=n+(n===1?" year":" years");
+  $("#tv-result").textContent=gbp(pv);
+  $("#tv-formula").innerHTML=`${gbp(amt,0)} ÷ (1 + ${r.toFixed(3).replace(/0+$/,"").replace(/\.$/,"")})<sup>${n}</sup> = <b>${gbp(pv)}</b>`;
+  $("#tv-lost").textContent=gbp(amt-pv);
+  const W=640,H=250,L=52,R=10,T=26,B=30,cw=W-L-R,ch=H-T-B,bw=cw/11;let s="";
+  [0,.25,.5,.75,1].forEach(f=>{const y=T+ch*(1-f);s+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}"/><text class="ax" x="${L-8}" y="${y+4}" text-anchor="end">£${Math.round(amt*f)}</text>`});
+  for(let t=0;t<=10;t++){const v=amt/Math.pow(1+r,t),h=ch*v/amt,w=bw*.64,x=L+t*bw+bw*.18,y=T+ch-h,on=t===n;
+    s+=`<rect class="${on?"bar-hl":"bar"}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+    s+=`<text class="ax" x="${x+w/2}" y="${H-10}" text-anchor="middle">${t===0?"Now":"Yr "+t}</text>`;
+    if(on||t===0)s+=`<text class="val" x="${x+w/2}" y="${y-7}" text-anchor="middle">£${Math.round(v)}</text>`;}
+  $("#tv-chart").innerHTML=s;
+}
+["tv-amt","tv-rate","tv-yrs"].forEach(id=>$("#"+id).addEventListener("input",renderTime));renderTime();
+
+/* ---------- chapter 2 ---------- */
+function renderCash(){
+  const ebit=+$("#cf-ebit").value,tr=+$("#cf-tax").value/100,da=+$("#cf-da").value,cx=+$("#cf-capex").value,wc=+$("#cf-wc").value;
+  const tax=ebit*tr,nopat=ebit-tax,fcf=nopat+da-cx-wc;
+  $("#cf-ebit-o").textContent="£"+ebit+"k";$("#cf-tax-o").textContent=pct(tr,0);$("#cf-da-o").textContent="£"+da+"k";$("#cf-capex-o").textContent="£"+cx+"k";$("#cf-wc-o").textContent="£"+wc+"k";
+  const st=[["EBIT","tot",ebit],["Tax","neg",-tax],["NOPAT","tot",nopat],["D&A","pos",da],["Capex","neg",-cx],["Work. cap.","neg",-wc],["FCF","tot",fcf]];
+  let run=0;const bars=st.map(([k,t,v])=>{let a,b;if(t==="tot"){a=0;b=v;run=v}else{a=run;b=run+v;run=b}return{k,t,v,a,b}});
+  const lo=Math.min(0,...bars.map(b=>Math.min(b.a,b.b))),hi=Math.max(...bars.map(b=>Math.max(b.a,b.b)));
+  const W=640,H=280,L=10,R=10,T=28,Bm=34,cw=W-L-R,ch=H-T-Bm,bw=cw/st.length,y=v=>T+ch*(hi-v)/(hi-lo||1);
+  let s=`<line class="zero" x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}"/>`;
+  bars.forEach((b,i)=>{const x=L+i*bw+bw*.16,w=bw*.68,top=y(Math.max(b.a,b.b)),h=Math.max(1,Math.abs(y(b.a)-y(b.b)));
+    s+=`<rect class="bar-${b.t}" x="${x}" y="${top}" width="${w}" height="${h}"/>`;
+    const lbl=(b.t==="tot"?"":b.v>=0?"+":"−")+"£"+Math.round(Math.abs(b.v))+"k";
+    const ly=b.v<0&&b.t==="tot"?y(b.b)+16:top-8;
+    s+=`<text class="val" x="${x+w/2}" y="${ly}" text-anchor="middle">${b.t==="tot"&&b.v<0?"−£"+Math.round(-b.v)+"k":lbl}</text>`;
+    s+=`<text class="ax" x="${x+w/2}" y="${H-12}" text-anchor="middle">${b.k}</text>`;
+    if(i<bars.length-1){const yy=y(b.b);s+=`<line class="conn" x1="${x+w}" x2="${x+bw}" y1="${yy}" y2="${yy}"/>`}});
+  $("#cf-chart").innerHTML=s;
+  const k=v=>"£"+Math.round(v)+"k";
+  $("#cf-steps").innerHTML=[
+    `<li><b>Start with EBIT (${k(ebit)}).</b> Earnings before interest and tax: sales minus the costs of running the business.</li>`,
+    `<li><b>Take off tax (${k(tax)}).</b> The government takes its share. What is left is NOPAT, net operating profit after tax (${k(nopat)}).</li>`,
+    `<li><b>Add back depreciation (${k(da)}).</b> Depreciation spreads the cost of old equipment over its life. It reduces profit in the accounts, but no cash leaves the business this year, so we add it back.</li>`,
+    `<li><b>Take off capex (${k(cx)}).</b> Capital expenditure is cash spent on new equipment, like tea machines and shop fit-outs. It is real cash going out.</li>`,
+    `<li><b>Take off extra working capital (${k(wc)}).</b> A growing business ties up cash in stock (tapioca, cups, milk) and in bills customers have not paid yet.</li>`,
+    `<li><b>Free cash flow = ${k(fcf)}.</b> ${fcf<0?"Negative free cash flow is normal for a firm investing heavily to grow, but it cannot last forever.":"This is the cash the shop truly generates for its investors this year."}</li>`
+  ].join("");
+}
+["cf-ebit","cf-tax","cf-da","cf-capex","cf-wc"].forEach(id=>$("#"+id).addEventListener("input",renderCash));renderCash();
+
+/* ---------- chapter 3 ---------- */
+const RISK={4:"Very safe. The UK government has always repaid its debts, so investors accept a low return.",8:"An established business with steady sales. Some risk, so investors want more than a government bond pays.",20:"Most start-ups fail. Investors only take that risk if the possible reward is large, so the rate is high and the value today is low."};
+function renderRisk(r){
+  const pv=1e6/Math.pow(1+r/100,5);
+  $("#risk-pv").textContent=gbp(pv,0);
+  $("#risk-f").innerHTML=`£1,000,000 ÷ (1 + ${(r/100).toFixed(2)})<sup>5</sup>`;
+  $("#risk-note").textContent=RISK[r];
+}
+$$("[data-risk]").forEach(b=>b.addEventListener("click",()=>{$$("[data-risk]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));renderRisk(+b.dataset.risk)}));
+renderRisk(8);
+function renderWacc(touched){
+  const beta=+$("#w-beta").value,d=+$("#w-debt").value/100,e=1-d;
+  const ke=0.04+beta*0.05,kd=0.06*(1-0.25),w=e*ke+d*kd;
+  $("#w-beta-o").textContent=beta.toFixed(1);$("#w-debt-o").textContent=pct(d,0);
+  $("#w-ke").innerHTML=`Cost of equity = 4% + ${beta.toFixed(1)} × 5% = <b>${pct(ke)}</b>`;
+  $("#w-kd").innerHTML=`Cost of debt after tax = 6% × (1 − 0.25) = <b>${pct(kd,2)}</b>`;
+  $("#w-wacc").innerHTML=`WACC = ${pct(e,0)} × ${pct(ke)} + ${pct(d,0)} × ${pct(kd,2)} = <b>${pct(w,2)}</b>`;
+  $("#w-out").textContent=pct(w,2);
+  const W=640,ex=W*e;
+  $("#w-chart").innerHTML=`<rect class="bar-hl" x="0" y="8" width="${ex}" height="30"/><rect class="bar" x="${ex}" y="8" width="${W-ex}" height="30"/>`+
+    (e>0.12?`<text class="ax" x="4" y="58">Equity ${pct(e,0)}</text>`:"")+(d>0.12?`<text class="ax" x="${W-4}" y="58" text-anchor="end">Debt ${pct(d,0)}</text>`:"");
+  if(touched)markDone("rate");
+}
+["w-beta","w-debt"].forEach(id=>$("#"+id).addEventListener("input",()=>renderWacc(true)));renderWacc(false);
+
+/* ---------- chapter 4 ---------- */
+function renderTG(){
+  const g=+$("#tg-g").value/100,r=+$("#tg-r").value/100,f5=10,ok=r>g;
+  $("#tg-g-o").textContent=pct(g);$("#tg-r-o").textContent=pct(r);
+  $("#tg-warn").hidden=ok;
+  if(ok){const tv=f5*(1+g)/(r-g);$("#tg-tv").textContent="£"+tv.toFixed(1)+"m";$("#tg-f").innerHTML=`£10m × ${(1+g).toFixed(3).replace(/0+$/,"")} ÷ (${r.toFixed(3).replace(/0+$/,"")} − ${g.toFixed(3).replace(/0+$/,"").replace(/\.$/,".0")}) = <b>£${tv.toFixed(1)}m</b>`}
+  else{$("#tg-tv").textContent="Infinite";$("#tg-f").textContent="r − g is zero or negative"}
+  const N=30,cash=[],pvs=[];const early=[8,8.5,9,9.5,10];
+  for(let t=1;t<=N;t++){const c=t<=5?early[t-1]:f5*Math.pow(1+g,t-5);cash.push(c);pvs.push(c/Math.pow(1+r,t))}
+  const hi=Math.max(...cash),W=640,H=260,L=40,R=8,T=28,B=30,cw=W-L-R,ch=H-T-B,bw=cw/N;
+  let s="";[0,.5,1].forEach(f=>{const y=T+ch*(1-f);s+=`<line class="gl" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}"/><text class="ax" x="${L-6}" y="${y+4}" text-anchor="end">${(hi*f).toFixed(0)}</text>`});
+  for(let i=0;i<N;i++){const x=L+i*bw+bw*.12,w=bw*.76,hc=ch*cash[i]/hi,hp=ch*pvs[i]/hi;
+    s+=`<rect class="bar-out" x="${x}" y="${T+ch-hc}" width="${w}" height="${hc}"/>`;
+    s+=`<rect class="${i<5?"bar-hl":"bar-tv"}" x="${x}" y="${T+ch-hp}" width="${w}" height="${hp}"/>`;
+    if(i===0||i===4||(i+1)%5===0)s+=`<text class="ax" x="${x+w/2}" y="${H-10}" text-anchor="middle">${i+1}</text>`;}
+  const dx=L+5*bw;s+=`<line class="div" x1="${dx}" x2="${dx}" y1="${T-6}" y2="${T+ch}"/>`;
+  s+=`<text class="lab" x="${L+2}" y="${T-10}">Forecast</text><text class="lab" x="${dx+6}" y="${T-10}">Terminal value: year 6 onwards, forever</text>`;
+  $("#tg-chart").innerHTML=s;
+}
+["tg-g","tg-r"].forEach(id=>$("#"+id).addEventListener("input",renderTG));renderTG();
+
+/* ---------- your turn checks ---------- */
+const ANS={
+  time:{v:100,ok:"Correct. £121 ÷ 1.1² = £121 ÷ 1.21 = £100.",hint:"Not quite. Divide £121 by (1 + 0.10) squared, which is 1.21."},
+  cash:{v:10,ok:"Correct. NOPAT = 20 × 0.75 = 15. Then 15 + 5 − 8 − 2 = £10m.",hint:"Not quite. First take 25% tax off the EBIT, then add depreciation and subtract capex and the working capital increase."},
+  forever:{v:204,ok:"Correct. £10m × 1.02 ÷ (0.07 − 0.02) = £10.2m ÷ 0.05 = £204m.",hint:"Not quite. Multiply £10m by 1.02, then divide by (0.07 − 0.02)."}
+};
+$$("[data-check]").forEach(btn=>{
+  const id=btn.dataset.check,box=$("#turn-"+id),inp=$("input",box),fb=$(".fb",box);
+  const go=()=>{const raw=inp.value.replace(/[£,\sm]/gi,"");const v=parseFloat(raw);
+    if(raw===""||isNaN(v)){fb.className="fb no";fb.textContent="Type a number first, for example 95.5";return}
+    if(Math.abs(v-ANS[id].v)<=Math.max(0.5,ANS[id].v*0.005)){fb.className="fb ok";fb.textContent=ANS[id].ok;markDone(id)}
+    else{fb.className="fb no";fb.textContent=ANS[id].hint}};
+  btn.addEventListener("click",go);inp.addEventListener("keydown",e=>{if(e.key==="Enter")go()});
+});
+
+/* ---------- chapter 5: builder ---------- */
+const FIXED={rev0:50,debt:15,shares:10,price:5.90};
+const PRESETS={
+  base:{g:12,margin:15,tax:25,da:4,capex:6,wc:10,r:10,tg:2.5},
+  cautious:{g:6,margin:12,tax:25,da:4,capex:6,wc:10,r:11,tg:2},
+  optimistic:{g:18,margin:18,tax:25,da:4,capex:6,wc:10,r:9,tg:3}
+};
+const INPUTS=["g","margin","tax","da","capex","wc","r","tg"];
+function setInputs(p){INPUTS.forEach(k=>$("#b-"+k).value=p[k])}
+setInputs(PRESETS.base);
+function params(){const p={};INPUTS.forEach(k=>p[k]=+$("#b-"+k).value/100);return Object.assign(p,FIXED)}
+function model(p){
+  const rows=[{t:0,rev:p.rev0}];let prev=p.rev0,sumPV=0;
+  for(let t=1;t<=5;t++){const rev=prev*(1+p.g),ebit=rev*p.margin,tax=ebit*p.tax,nopat=ebit-tax,da=rev*p.da,capex=rev*p.capex,dwc=(rev-prev)*p.wc;
+    const fcf=nopat+da-capex-dwc,df=1/Math.pow(1+p.r,t),pv=fcf*df;rows.push({t,rev,ebit,tax,nopat,da,capex,dwc,fcf,df,pv});sumPV+=pv;prev=rev}
+  const last=rows[5],valid=p.r>p.tg,tv=valid?last.fcf*(1+p.tg)/(p.r-p.tg):NaN,pvTV=tv*last.df,ev=sumPV+pvTV,eq=ev-p.debt,ps=eq/p.shares;
+  return{rows,sumPV,tv,pvTV,ev,eq,ps,valid,last};
+}
+const STEPS=[
+  {t:"Forecast revenue",b:"Every DCF starts with sales. Bubble & Co sold <b>£50m</b> last year. Choose how fast you think sales will grow each year for the next five years. A chain opening new shops might grow 10% to 20% a year. A mature business might grow 2% to 5%. Revenue each year = last year's revenue × (1 + growth)."},
+  {t:"From sales to profit",b:"The <b>EBIT margin</b> is how many pence of operating profit the business keeps from each £1 of sales. A 15% margin means 15p per £1. Then take off tax. What remains is <b>NOPAT</b>, the profit the business would make if it had no debt."},
+  {t:"From profit to cash",b:"Now convert profit into <b>free cash flow</b>, exactly as in Chapter 2. Add back depreciation (no cash leaves), take off capex (cash spent on new shops and machines) and take off working capital. Here, for every extra £1 of sales, the business ties up some pence in stock and unpaid bills."},
+  {t:"Discount each year",b:"Cash in year 5 is worth less today than cash in year 1. The <b>discount factor</b> = 1 ÷ (1 + r)<sup>year</sup>. Multiply each year's FCF by its factor to get its <b>present value</b>. Bubble & Co is a growing but established chain, so 9% to 11% is a reasonable discount rate."},
+  {t:"Add the terminal value",b:"Bubble & Co will not close after year 5. Use the growing perpetuity formula from Chapter 4 to value every year after that, then discount it back from year 5 to today. Keep long-run growth near 2% to 3%."},
+  {t:"Find the value per share",b:"Add the present values together to get the <b>enterprise value</b>, the value of the whole business. Lenders are owed money first, so subtract <b>net debt</b> (debt minus cash) to get the <b>equity value</b> that belongs to shareholders. Divide by the number of shares and compare with the share price."}
+];
+let step=1,showAll=false;
+const ROWS=[
+  {k:"rev",l:"Revenue",h:"Last year × (1 + growth)",s:1},
+  {k:"ebit",l:"EBIT",h:"Revenue × EBIT margin",s:2},
+  {k:"tax",l:"Tax",h:"EBIT × tax rate",s:2,neg:1},
+  {k:"nopat",l:"NOPAT",h:"EBIT minus tax",s:2,tot:1},
+  {k:"da",l:"Add back D&A",h:"Revenue × D&A %",s:3},
+  {k:"capex",l:"Capex",h:"Revenue × capex %",s:3,neg:1},
+  {k:"dwc",l:"Increase in working capital",h:"Extra sales × WC %",s:3,neg:1},
+  {k:"fcf",l:"Free cash flow",h:"NOPAT + D&A − capex − WC",s:3,tot:1},
+  {k:"df",l:"Discount factor",h:"1 ÷ (1 + r)^year",s:4,df:1},
+  {k:"pv",l:"Present value of FCF",h:"FCF × discount factor",s:4,tot:1}
+];
+function cur(){return showAll?6:step}
+function renderBuild(){
+  const p=params(),m=model(p),c=cur();
+  $("#b-g-o").textContent=pct(p.g,0);$("#b-margin-o").textContent=pct(p.margin,0);$("#b-tax-o").textContent=pct(p.tax,0);
+  $("#b-da-o").textContent=pct(p.da);$("#b-capex-o").textContent=pct(p.capex);$("#b-wc-o").textContent=pct(p.wc,0)+" (" + Math.round(p.wc*100)+"p per £1)";
+  $("#b-r-o").textContent=pct(p.r);$("#b-tg-o").textContent=pct(p.tg,2).replace(/0%$/,"%");
+  /* steps */
+  $("#steps").innerHTML=STEPS.map((s,i)=>`<button type="button" role="tab" class="step ${i+1===c?"cur":i+1<c?"seen":""}" aria-selected="${i+1===c}" data-go="${i+1}"><span class="n">${i+1}</span>${s.t}</button>`).join("");
+  const S=STEPS[c-1];
+  $("#explain").innerHTML=showAll?`<h3>The whole model</h3><p>Every step is unlocked. Change any assumption and the whole model updates, just like a spreadsheet. Untick "Show the whole model" to go back to the guided steps.</p>`:`<span class="eyebrow">Step ${c} of 6</span><h3>${S.t}</h3><p>${S.b}</p>`;
+  $("#st-back").disabled=showAll||step===1;$("#st-next").disabled=showAll||step===6;
+  $$(".group[data-step]").forEach(g=>{const s=+g.dataset.step;g.classList.toggle("ahead",s>c);g.classList.toggle("now",s===c&&!showAll);$$("input",g).forEach(i=>i.disabled=s>c)});
+  /* table */
+  let h=`<thead><tr><th scope="col">£m</th><th scope="col">Year 0<br>actual</th>${[1,2,3,4,5].map(t=>`<th scope="col">Year ${t}<br>forecast</th>`).join("")}</tr></thead><tbody>`;
+  ROWS.forEach(r=>{const locked=r.s>c,cls=[r.tot?"total":"",locked?"locked":"",r.s===c&&!showAll?"fresh":""].join(" ");
+    h+=`<tr class="${cls}"><td>${r.l}<span class="how">${r.h}</span></td>`;
+    m.rows.forEach(row=>{let v="";if(locked)v="?";else if(row.t===0)v=r.k==="rev"?row.rev.toFixed(1):"";else{const x=row[r.k];v=r.df?x.toFixed(3):acc(r.neg?-x:x)}h+=`<td>${v}</td>`});
+    h+="</tr>"});
+  $("#model").innerHTML=h+"</tbody>";
+  /* TV box */
+  const L=m.last;
+  if(c<5)$("#tv-box").innerHTML=`<h3>Terminal value</h3><p class="lockmsg">Unlocks at step 5.</p>`;
+  else if(!m.valid)$("#tv-box").innerHTML=`<h3>Terminal value</h3><div class="warn">Long-run growth must be lower than the discount rate, or the formula gives a nonsense answer. Lower the growth rate or raise the discount rate.</div>`;
+  else $("#tv-box").innerHTML=`<h3>Terminal value</h3><div class="bridge">
+    <div><span>Year 5 free cash flow</span><span>£${L.fcf.toFixed(1)}m</span></div>
+    <div><span>× (1 + g)</span><span>× ${(1+p.tg).toFixed(4).replace(/0+$/,"")}</span></div>
+    <div><span>÷ (r − g)</span><span>÷ ${(p.r-p.tg).toFixed(4).replace(/0+$/,"")}</span></div>
+    <div class="eq"><span>Terminal value at year 5</span><span>£${m.tv.toFixed(1)}m</span></div>
+    <div><span>× year 5 discount factor</span><span>× ${L.df.toFixed(3)}</span></div>
+    <div class="eq"><span>Present value of TV</span><span>£${m.pvTV.toFixed(1)}m</span></div></div>`;
+  /* bridge + verdict */
+  if(c<6)$("#bridge-box").innerHTML=`<h3>Valuation</h3><p class="lockmsg">Unlocks at step 6.</p>`;
+  else if(!m.valid)$("#bridge-box").innerHTML=`<h3>Valuation</h3><p class="lockmsg">Fix the terminal value first.</p>`;
+  else{const up=m.ps/p.price-1,kind=m.ps<=0?"down":up>0.1?"up":up<-0.1?"down":"flat";
+    const head=m.ps<=0?"The shares look worthless on these numbers":kind==="up"?`Looks undervalued by ${pct(up,0)}`:kind==="down"?`Looks overvalued by ${pct(-up,0)}`:"Close to the market price";
+    const body=m.ps<=0?"The business is worth less than its debt in this scenario. Check your assumptions: are margins or growth too low?":kind==="up"?"Your model says the shares are worth more than they cost. If your assumptions are right, they could be a bargain.":kind==="down"?"Your model says the shares are worth less than they cost. Either the market is too optimistic, or your assumptions are too cautious.":"Your model roughly agrees with the market. The price already reflects assumptions like yours.";
+    $("#bridge-box").innerHTML=`<h3>Valuation</h3><div class="bridge">
+      <div><span>PV of years 1 to 5</span><span>£${m.sumPV.toFixed(1)}m</span></div>
+      <div><span>+ PV of terminal value</span><span>£${m.pvTV.toFixed(1)}m</span></div>
+      <div class="eq"><span>Enterprise value</span><span>£${m.ev.toFixed(1)}m</span></div>
+      <div><span>− Net debt</span><span>(${FIXED.debt.toFixed(1)})</span></div>
+      <div class="eq"><span>Equity value</span><span>£${m.eq.toFixed(1)}m</span></div>
+      <div><span>÷ Number of shares</span><span>${FIXED.shares}m</span></div>
+      <div class="final"><span>Value per share</span><span>${gbp(m.ps)}</span></div>
+      <div><span>Market share price</span><span>${gbp(p.price)}</span></div></div>
+      <div class="verdict ${kind}"><b>${head}</b><span>${body}</span></div>`;
+    markDone("build");}
+  /* value sources chart */
+  if(c<4){$("#src-chart").innerHTML=`<text class="ax" x="320" y="125" text-anchor="middle">Unlocks at step 4</text>`;$("#src-note").textContent="";}
+  else{const items=m.rows.slice(1).map(r=>({k:"Yr "+r.t,v:r.pv,c:"bar-hl"}));if(c>=5&&m.valid)items.push({k:"TV",v:m.pvTV,c:"bar-tv"});
+    const hi=Math.max(1,...items.map(i=>i.v)),lo=Math.min(0,...items.map(i=>i.v)),W=640,H=250,Lp=40,R=10,T=26,B=30,cw=W-Lp-R,ch=H-T-B,bw=cw/6,y=v=>T+ch*(hi-v)/(hi-lo);
+    let s="";[0,.5,1].forEach(f=>{const v=lo+(hi-lo)*f,yy=y(v);s+=`<line class="gl" x1="${Lp}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="ax" x="${Lp-6}" y="${yy+4}" text-anchor="end">${v.toFixed(0)}</text>`});
+    items.forEach((it,i)=>{const x=Lp+i*bw+bw*.2,w=bw*.6,top=y(Math.max(0,it.v)),h=Math.max(1,Math.abs(y(it.v)-y(0)));
+      s+=`<rect class="${it.c}" x="${x}" y="${top}" width="${w}" height="${h}"/><text class="val" x="${x+w/2}" y="${top-7}" text-anchor="middle">${it.v.toFixed(1)}</text><text class="ax" x="${x+w/2}" y="${H-10}" text-anchor="middle">${it.k}</text>`});
+    s+=`<line class="zero" x1="${Lp}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}"/>`;
+    $("#src-chart").innerHTML=s;
+    $("#src-note").innerHTML=c>=5&&m.valid?`The terminal value supplies <mark><b>${pct(m.pvTV/m.ev,0)}</b></mark> of the enterprise value. 60% to 80% is common, which is why the long-run growth and discount rate assumptions matter so much.`:"Present value of each year's free cash flow, £m. Later years are discounted more heavily.";}
+  renderSens(p);
+}
+$("#steps").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)return;showAll=false;$("#st-all").checked=false;step=+b.dataset.go;renderBuild()});
+$("#st-next").addEventListener("click",()=>{if(step<6){step++;renderBuild()}});
+$("#st-back").addEventListener("click",()=>{if(step>1){step--;renderBuild()}});
+$("#st-all").addEventListener("change",e=>{showAll=e.target.checked;renderBuild()});
+INPUTS.forEach(k=>$("#b-"+k).addEventListener("input",renderBuild));
+$$("[data-preset]").forEach(b=>b.addEventListener("click",()=>{setInputs(PRESETS[b.dataset.preset]);renderBuild()}));
+
+/* ---------- chapter 6: sensitivity ---------- */
+function renderSens(p){
+  const rs=[-0.02,-0.01,0,0.01,0.02].map(d=>+(p.r+d).toFixed(4)).filter(r=>r>0);
+  const gs=[-0.01,-0.005,0,0.005,0.01].map(d=>+(p.tg+d).toFixed(4));
+  let h=`<thead><tr><th scope="col">Discount rate ↓ &nbsp; Growth →</th>${gs.map(g=>`<th scope="col">${pct(g,2).replace(/0%$/,"%")}</th>`).join("")}</tr></thead><tbody>`;
+  rs.forEach(r=>{h+=`<tr><th scope="row">${pct(r)}</th>`;gs.forEach(g=>{const base=Math.abs(r-p.r)<1e-6&&Math.abs(g-p.tg)<1e-6;
+    if(r<=g){h+=`<td class="${base?"base":""}" style="background:var(--paper)">n/a</td>`;return}
+    const ps=model(Object.assign({},p,{r,tg:g})).ps,d=ps/p.price-1,amt=Math.min(70,Math.round(Math.abs(d)*90)+10);
+    const col=d>=0?`color-mix(in srgb, var(--green) ${amt}%, var(--card))`:`color-mix(in srgb, var(--red) ${amt}%, var(--card))`;
+    const txt=amt>45?"var(--card)":"var(--ink)";
+    h+=`<td class="${base?"base":""}" style="background:${col};color:${txt}">${gbp(ps)}</td>`});h+="</tr>"});
+  $("#sens").innerHTML=h+"</tbody>";
+  const vals=[];rs.forEach(r=>gs.forEach(g=>{if(r>g)vals.push(model(Object.assign({},p,{r,tg:g})).ps)}));
+  if(vals.length)$("#sens-note").innerHTML=`Across this table the value per share ranges from <b class="num">${gbp(Math.min(...vals))}</b> to <b class="num">${gbp(Math.max(...vals))}</b>, from changes of just two percentage points in r and one in g.`;
+}
+
+/* ---------- quiz ---------- */
+const QUIZ=[
+  ["What does DCF stand for?",["Direct capital funding","Discounted cash flow","Dividend cash forecast","Debt credit factor"],1,"A DCF discounts future cash flows back to today's value."],
+  ["If the discount rate rises and nothing else changes, the DCF value will...",["rise","stay the same","fall","double"],2,"A bigger r makes the bottom of each fraction bigger, so every present value gets smaller."],
+  ["Which item is added back when moving from NOPAT to free cash flow?",["Capital expenditure","Depreciation","An increase in working capital","Tax"],1,"Depreciation reduces accounting profit but no cash leaves the business, so it is added back."],
+  ["A riskier company should be valued using...",["a higher discount rate","a lower discount rate","no discount rate","the inflation rate only"],0,"Investors demand a higher return for taking more risk, which means a higher discount rate."],
+  ["£110 received in one year, with a 10% discount rate, is worth how much today?",["£99","£100","£110","£121"],1,"£110 ÷ 1.10 = £100."],
+  ["Why is a long-run growth rate of 8% a year forever unrealistic for a UK company?",["Growth rates must be negative","It is higher than the discount rate allows","No company can grow faster than the whole economy forever","Tax rules ban it"],2,"The UK economy grows at roughly 2% to 3% a year in the long run. A company growing at 8% forever would eventually be bigger than the economy."],
+  ["Enterprise value is £80m, net debt is £15m and there are 10m shares. What is the value per share?",["£8.00","£9.50","£6.50","£5.30"],2,"Equity value = £80m − £15m = £65m. Then £65m ÷ 10m shares = £6.50."],
+  ["Which is the best evaluation point about a DCF?",["It gives one exact, correct value","It depends heavily on assumptions, so it gives a range of values","It ignores the future","It only works for loss-making firms"],1,"Small changes in growth, margins, r or g change the answer a lot. Good analysis presents a range and explains the assumptions."]
+];
+let answers={};
+function renderQuiz(){
+  $("#quizbox").innerHTML=QUIZ.map(([q,opts,ans,why],i)=>{const a=answers[i];const done=a!==undefined;
+    return `<div class="q ${done?"answered":""}"><h3>${i+1}. ${q}</h3><div class="opts">${opts.map((o,j)=>`<button type="button" class="opt ${done&&j===ans?"right":""} ${done&&j===a&&a!==ans?"wrong":""}" data-q="${i}" data-o="${j}" ${done?"disabled":""}>${o}</button>`).join("")}</div>${done?`<p class="why"><b>${a===ans?"Correct.":"Not this time."}</b> ${why}</p>`:""}</div>`}).join("");
+  const n=Object.keys(answers).length,right=Object.entries(answers).filter(([i,a])=>QUIZ[i][2]===a).length;
+  $("#score").textContent=n?`Score: ${right} / ${n} answered.`:"";
+  if(n===QUIZ.length)markDone("quiz");
+}
+$("#quizbox").addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(!b)return;answers[+b.dataset.q]=+b.dataset.o;renderQuiz()});
+$("#quiz-reset").addEventListener("click",()=>{answers={};renderQuiz()});
+renderQuiz();
+
+/* ---------- glossary ---------- */
+const G=[
+  ["Free cash flow (FCF)","Cash a business generates after paying running costs and tax and investing in equipment and working capital."],
+  ["Present value (PV)","What a future amount of money is worth today, once you allow for waiting and risk."],
+  ["Discount rate (r)","The yearly return investors require. Used to shrink future cash flows to today's value."],
+  ["WACC","Weighted average cost of capital. The blended return required by shareholders and lenders."],
+  ["Terminal value (TV)","The value of all cash flows after the forecast period, assuming steady growth forever."],
+  ["Perpetuity","A stream of cash flows that continues forever."],
+  ["Enterprise value (EV)","The value of the whole business, before taking account of who funded it."],
+  ["Equity value","The value belonging to shareholders. Enterprise value minus net debt."],
+  ["Net debt","Borrowings minus the cash the business holds."],
+  ["EBIT","Earnings before interest and tax. Operating profit."],
+  ["NOPAT","Net operating profit after tax. EBIT minus the tax on it."],
+  ["Depreciation (D&A)","Spreading the cost of an asset over its useful life. Not a cash cost."],
+  ["Capex","Capital expenditure. Cash spent on long-lasting assets such as machinery and shop fit-outs."],
+  ["Working capital","Cash tied up in stock and unpaid customer bills, minus what the firm owes its suppliers."],
+  ["Beta","How much a share's price moves compared with the stock market as a whole."],
+  ["Risk-free rate","The return on a very safe investment, usually a government bond."]
+];
+$("#gloss").innerHTML=G.map(([t,d])=>`<div><dt>${t}</dt><dd>${d}</dd></div>`).join("");
+
+renderBuild();
+})();
+</script>
+</body>
+</html>
